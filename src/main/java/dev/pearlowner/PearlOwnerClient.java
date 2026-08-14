@@ -16,7 +16,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.Projectile;
-import net.minecraft.world.entity.projectile.ThrownEnderpearl;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Optional;
@@ -24,11 +23,11 @@ import java.util.UUID;
 
 public class PearlOwnerClient implements ClientModInitializer {
 
-    /** Сколько тиков нужно непрерывно смотреть на жемчужину, чтобы вывести ник в чат (20 тик/с * 3с). */
+    /** Сколько тиков нужно непрерывно смотреть на снаряд, чтобы вывести ник в чат (20 тик/с * 3с). */
     private static final int LOOK_TICKS_THRESHOLD = 60;
-    /** Дальность луча взгляда для поиска жемчужины (в блоках). */
+    /** Дальность луча взгляда для поиска снаряда (в блоках). */
     private static final double LOOK_REACH = 64.0;
-    /** Небольшое расширение хитбокса жемчужины, чтобы было проще "прицелиться". */
+    /** Небольшое расширение хитбокса снаряда, чтобы было проще "прицелиться". */
     private static final double LOOK_HIT_INFLATE = 0.35;
 
     private Entity lookTarget = null;
@@ -128,16 +127,17 @@ public class PearlOwnerClient implements ClientModInitializer {
     }
 
     /**
-     * Каждый тик проверяет, смотрит ли игрок на эндер-жемчуг, и если это
-     * длится дольше {@link #LOOK_TICKS_THRESHOLD} тиков подряд — один раз
-     * пишет ник владельца в чат. Взгляд "сбрасывается", если игрок отвёл
-     * камеру или жемчужина исчезла (подобрана/протухла) — так что при новом
-     * взгляде на ту же (или другую) жемчужину отсчёт и сообщение будут снова.
+     * Каждый тик проверяет, смотрит ли игрок на снаряд (эндер-жемчуг, стрела,
+     * снежок и т.д.), и если это длится дольше {@link #LOOK_TICKS_THRESHOLD}
+     * тиков подряд — один раз пишет ник владельца в чат. Взгляд "сбрасывается",
+     * если игрок отвёл камеру или снаряд исчез (подобран/протух/попал в цель) —
+     * так что при новом взгляде на тот же (или другой) снаряд отсчёт и
+     * сообщение будут снова.
      */
     private void checkPearlGazeTick(Minecraft client) {
         if (client.level == null || client.player == null || client.getConnection() == null) return;
 
-        Entity target = findLookedAtPearl(client);
+        Entity target = findLookedAtProjectile(client);
 
         if (target == null || target != lookTarget || target.isRemoved()) {
             lookTarget = target != null && !target.isRemoved() ? target : null;
@@ -149,12 +149,12 @@ public class PearlOwnerClient implements ClientModInitializer {
         lookTicks++;
         if (lookTicks >= LOOK_TICKS_THRESHOLD && !lookAnnounced) {
             lookAnnounced = true;
-            announcePearlOwner(client, target);
+            announceProjectileOwner(client, target);
         }
     }
 
-    /** Ищет ближайшую эндер-жемчужину, пересекающую луч взгляда игрока. */
-    private Entity findLookedAtPearl(Minecraft client) {
+    /** Ищет ближайший снаряд с известным владельцем, пересекающий луч взгляда игрока. */
+    private Entity findLookedAtProjectile(Minecraft client) {
         var player = client.player;
         Vec3 eye = player.getEyePosition(1.0f);
         Vec3 look = player.getViewVector(1.0f);
@@ -164,7 +164,8 @@ public class PearlOwnerClient implements ClientModInitializer {
         double closestDistSq = Double.MAX_VALUE;
 
         for (Entity entity : client.level.entitiesForRendering()) {
-            if (!(entity instanceof ThrownEnderpearl)) continue;
+            if (!(entity instanceof Projectile projectile)) continue;
+            if (((ProjectileOwnerAccessor) projectile).pearlowner$getOwnerUuid() == null) continue;
 
             Optional<Vec3> hit = entity.getBoundingBox().inflate(LOOK_HIT_INFLATE).clip(eye, end);
             if (hit.isEmpty()) continue;
@@ -178,8 +179,8 @@ public class PearlOwnerClient implements ClientModInitializer {
         return closest;
     }
 
-    private void announcePearlOwner(Minecraft client, Entity pearl) {
-        UUID ownerUuid = ((ProjectileOwnerAccessor) pearl).pearlowner$getOwnerUuid();
+    private void announceProjectileOwner(Minecraft client, Entity projectile) {
+        UUID ownerUuid = ((ProjectileOwnerAccessor) projectile).pearlowner$getOwnerUuid();
         if (ownerUuid == null) return;
 
         String name = PlayerUuidCache.getName(ownerUuid);
@@ -188,6 +189,6 @@ public class PearlOwnerClient implements ClientModInitializer {
         }
 
         client.player.sendSystemMessage(
-                Component.literal("§dЖемчужина §7принадлежит §f" + name));
+                Component.literal("§dСнаряд §7принадлежит §f" + name));
     }
 }
