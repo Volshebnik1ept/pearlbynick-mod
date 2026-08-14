@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '1.17-SNAPSHOT'
+    id 'net.fabricmc.fabric-loom' version '1.17-SNAPSHOT'
     id 'maven-publish'
 }
 
@@ -17,12 +17,11 @@ repositories {
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
 
-    // Yarn больше не существует для 26.x — MC официально без обфускации.
-    // Loom сам достаёт официальные Mojang mappings.
-    mappings loom.officialMojangMappings()
+    // Начиная с 26.1 Minecraft больше не обфусцирован —
+    // мэппинги (Yarn / official mojang mappings) больше не нужны и не используются.
 
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 }
 
 java {
