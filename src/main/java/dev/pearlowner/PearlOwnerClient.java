@@ -87,12 +87,9 @@ public class PearlOwnerClient implements ClientModInitializer {
         // подставь его вместо строки poseStack.mulPose(...) ниже.
         // Quaternionf camRotation = context.levelState().cameraRenderState.orientation; // пример
 
-        // В 26.2 LevelRenderContext больше не отдаёт DeltaTracker напрямую
-        // (тик-дельта теперь получается на этапе "extraction", а не "draw").
-        // ПРОВЕРИТЬ В IDE: точное имя поля/метода у Minecraft — раньше это
-        // было client.deltaTracker (field). Если IDE подсветит ошибку,
-        // Ctrl+клик по классу Minecraft и найди актуальный accessor.
-        float tickDelta = client.deltaTracker.getGameTimeDeltaPartialTick(true);
+        // В 26.2 поле deltaTracker у Minecraft приватное — доступ только через
+        // публичный геттер getDeltaTracker().
+        float tickDelta = client.getDeltaTracker().getGameTimeDeltaPartialTick(true);
         PoseStack poseStack = context.poseStack();
         if (poseStack == null) return;
 
