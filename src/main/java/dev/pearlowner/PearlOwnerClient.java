@@ -15,6 +15,7 @@ import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityReference;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.phys.Vec3;
 
@@ -103,8 +104,9 @@ public class PearlOwnerClient implements ClientModInitializer {
         for (Entity entity : client.level.entitiesForRendering()) {
             if (!(entity instanceof Projectile projectile)) continue;
 
-            UUID ownerUuid = ((ProjectileOwnerAccessor) projectile).pearlowner$getOwnerUuid();
-            if (ownerUuid == null) continue;
+            EntityReference<Entity> ownerRef = ((ProjectileOwnerAccessor) projectile).pearlowner$getOwnerRef();
+            if (ownerRef == null) continue;
+            UUID ownerUuid = ownerRef.getUUID();
 
             String name = PlayerUuidCache.getName(ownerUuid);
             if (name == null) {
@@ -171,7 +173,7 @@ public class PearlOwnerClient implements ClientModInitializer {
 
         for (Entity entity : client.level.entitiesForRendering()) {
             if (!(entity instanceof Projectile projectile)) continue;
-            if (((ProjectileOwnerAccessor) projectile).pearlowner$getOwnerUuid() == null) continue;
+            if (((ProjectileOwnerAccessor) projectile).pearlowner$getOwnerRef() == null) continue;
 
             Optional<Vec3> hit = entity.getBoundingBox().inflate(LOOK_HIT_INFLATE).clip(eye, end);
             if (hit.isEmpty()) continue;
@@ -186,8 +188,9 @@ public class PearlOwnerClient implements ClientModInitializer {
     }
 
     private void announceProjectileOwner(Minecraft client, Entity projectile) {
-        UUID ownerUuid = ((ProjectileOwnerAccessor) projectile).pearlowner$getOwnerUuid();
-        if (ownerUuid == null) return;
+        EntityReference<Entity> ownerRef = ((ProjectileOwnerAccessor) projectile).pearlowner$getOwnerRef();
+        if (ownerRef == null) return;
+        UUID ownerUuid = ownerRef.getUUID();
 
         String name = PlayerUuidCache.getName(ownerUuid);
         if (name == null) {
