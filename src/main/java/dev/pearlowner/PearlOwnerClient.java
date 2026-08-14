@@ -69,7 +69,11 @@ public class PearlOwnerClient implements ClientModInitializer {
                                 }))
         ));
 
-        LevelRenderEvents.AFTER_ENTITIES.register(this::renderOwnerLabels);
+        // В 26.2 события AFTER_ENTITIES больше нет — see PR fabricmc/fabric#5326
+        // ("re-add extraction events to LevelRenderEvents"). Ближайший аналог
+        // для "после отрисовки сущностей" — AFTER_SOLID_FEATURES (вызывается
+        // после того как отрисована сплошная геометрия entity/blockentity/particle).
+        LevelRenderEvents.AFTER_SOLID_FEATURES.register(this::renderOwnerLabels);
     }
 
     private void renderOwnerLabels(LevelRenderContext context) {
@@ -83,7 +87,12 @@ public class PearlOwnerClient implements ClientModInitializer {
         // подставь его вместо строки poseStack.mulPose(...) ниже.
         // Quaternionf camRotation = context.levelState().cameraRenderState.orientation; // пример
 
-        float tickDelta = context.deltaTracker().getGameTimeDeltaPartialTick(true);
+        // В 26.2 LevelRenderContext больше не отдаёт DeltaTracker напрямую
+        // (тик-дельта теперь получается на этапе "extraction", а не "draw").
+        // ПРОВЕРИТЬ В IDE: точное имя поля/метода у Minecraft — раньше это
+        // было client.deltaTracker (field). Если IDE подсветит ошибку,
+        // Ctrl+клик по классу Minecraft и найди актуальный accessor.
+        float tickDelta = client.deltaTracker.getGameTimeDeltaPartialTick(true);
         PoseStack poseStack = context.poseStack();
         if (poseStack == null) return;
 
