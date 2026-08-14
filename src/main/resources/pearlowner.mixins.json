@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "package": "dev.pearlowner.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "ProjectileOwnerAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
